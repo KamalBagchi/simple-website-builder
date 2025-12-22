@@ -20,8 +20,8 @@ import { Cross1Icon, LightningBoltIcon, MixerHorizontalIcon, StackIcon } from "@
 import { useFeature } from "flagged";
 import { motion } from "framer-motion";
 import { compact, find, first, get, reverse } from "lodash-es";
-import { defaultThemeValues } from "@/core/hooks/default-theme-options";
-import { ChaiBuilderThemeValues } from "@/types/types";
+// import { defaultThemeValues } from "@/core/hooks/default-theme-options";
+// import { ChaiBuilderThemeValues } from "@/types/types";
 
 import React, {
   ComponentType,
@@ -37,7 +37,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 // import { AiIcon } from "../ai/ai-icon";
 import Topbar from "@/_demo/top-bar";
-import { CssThemeVariables } from "../css-theme-var";
+// import { CssThemeVariables } from "../css-theme-var";
 
 const DEFAULT_PANEL_WIDTH = 280;
 
@@ -202,7 +202,7 @@ const RootLayout: ComponentType = () => {
     [handleMenuItemClick],
   );
 
-  const builderTheme = useBuilderProp("builderTheme", defaultThemeValues);
+  // const builderTheme = useBuilderProp("builderTheme", defaultThemeValues);
 
   return (
     <div dir={htmlDir} className="h-screen max-h-full w-screen overflow-x-hidden bg-background text-foreground">
@@ -282,7 +282,7 @@ const RootLayout: ComponentType = () => {
             <div id="canvas-container" className="flex h-full max-h-full flex-1 flex-col bg-slate-800/20">
               <CanvasTopBar />
               <Suspense>
-                <CssThemeVariables theme={builderTheme as ChaiBuilderThemeValues} />
+                {/* <CssThemeVariables theme={builderTheme as ChaiBuilderThemeValues} /> */}
                 <CanvasArea />
               </Suspense>
             </div>

@@ -31,11 +31,11 @@ export type ChaiBuilderThemeOptions = {
   fontFamily: false | Record<VariableKey, string>;
   borderRadius: BorderRadiusValue;
   colors:
-  | false
-  | {
-    group: string;
-    items: Record<VariableKey, [HSLColor, HSLColor]>;
-  }[];
+    | false
+    | {
+        group: string;
+        items: Record<VariableKey, [HSLColor, HSLColor]>;
+      }[];
 };
 
 export type Breakpoint = {
@@ -259,11 +259,15 @@ export interface ChaiBuilderEditorProps {
    */
   onSaveStateChange?: (syncStatus: "SAVED" | "SAVING" | "UNSAVED") => void;
 
+  /**
+   * onPreview
+   */
+  onPreview?: () => void;
 
   /**
-  * onImageSave callback function
-  * @param File
-  */
+   * onImageSave callback function
+   * @param File
+   */
   onImageUpload?: (file: File) => Promise<string | Error>;
 
   /**

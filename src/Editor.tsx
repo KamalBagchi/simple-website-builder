@@ -56,6 +56,10 @@ function ChaiBuilderDefault() {
         await new Promise((resolve) => setTimeout(resolve, 100));
         return true;
       }}
+      onPreview={() => {
+        alert("onPreview");
+        return true;
+      }}
       onImageUpload={async (file: File) => {
         console.log("File Selected: ", file);
         return "https://picsum.photos/200/300.jpg";

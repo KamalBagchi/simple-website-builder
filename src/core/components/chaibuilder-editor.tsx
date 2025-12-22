@@ -1,14 +1,13 @@
 import { chaiBuilderPropsAtom, chaiPageExternalDataAtom } from "@/core/atoms/builder";
 import { builderStore } from "@/core/atoms/store";
 import { selectedLibraryAtom } from "@/core/atoms/ui";
-import { CssThemeVariables } from "@/core/components/css-theme-var";
 import { FallbackError } from "@/core/components/fallback-error";
 import { RootLayout } from "@/core/components/layout/root-layout";
 import { PreviewScreen } from "@/core/components/PreviewScreen";
 import { ChaiFeatureFlagsWidget } from "@/core/flags/flags-widget";
 import { setDebugLogs } from "@/core/functions/logging";
 import { useBlocksStore } from "@/core/history/use-blocks-store-undoable-actions";
-import { defaultThemeValues } from "@/core/hooks/default-theme-options";
+// import { defaultThemeValues } from "@/core/hooks/default-theme-options";
 import { useBuilderProp, useBuilderReset, useSavePage } from "@/core/hooks/index";
 import { useBroadcastChannel, useUnmountBroadcastChannel } from "@/core/hooks/use-broadcast-channel";
 import { useExpandTree } from "@/core/hooks/use-expand-tree";
@@ -20,7 +19,6 @@ import "@/core/index.css";
 import i18n from "@/core/locales/load";
 import { ScreenTooSmall } from "@/core/screen-too-small";
 import { ChaiBuilderEditorProps } from "@/types/index";
-import { ChaiBuilderThemeValues } from "@/types/types";
 import { syncBlocksWithDefaults } from "@chaibuilder/runtime";
 import { useIntervalEffect } from "@react-hookz/web";
 import { useAtom } from "jotai/index";
@@ -115,10 +113,10 @@ const ChaiWatchers = (props: ChaiBuilderEditorProps) => {
 
 const ChaiBuilderComponent = (props: ChaiBuilderEditorProps) => {
   const RootLayoutComponent = useMemo(() => props.layout || RootLayout, [props.layout]);
-  const builderTheme = useBuilderProp("builderTheme", defaultThemeValues);
+  // const builderTheme = useBuilderProp("builderTheme", defaultThemeValues);
   return (
     <>
-      <CssThemeVariables theme={builderTheme as ChaiBuilderThemeValues} />
+      {/* <CssThemeVariables theme={builderTheme as ChaiBuilderThemeValues} /> */}
       <RootLayoutComponent />
     </>
   );

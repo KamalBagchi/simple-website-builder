@@ -281,7 +281,7 @@ const RootLayout: ComponentType = () => {
                 </div>
               )}
             </motion.div>
-            <div id="canvas-container" className="flex h-[calc(100vh-49px)] flex-1 flex-col bg-slate-800/20">
+            <div id="canvas-container" className="flex h-full max-h-full flex-1 flex-col bg-slate-800/20">
               <CanvasTopBar />
               <Suspense>
                 {/* <CssThemeVariables theme={builderTheme as ChaiBuilderThemeValues} /> */}

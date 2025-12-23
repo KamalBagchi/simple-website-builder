@@ -7,7 +7,7 @@ export default function RightTop() {
   const { savePage, saveState } = useSavePage();
   const onPreview = useBuilderProp("onPreview", () => {});
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-background p-2">
+    <div className="bg-paper flex items-center gap-2 rounded-lg p-2">
       <Button
         variant={panel === "theme" ? "secondary" : "ghost"}
         size="sm"

@@ -32,7 +32,7 @@ import RightTop from "@/_demo/right-top";
 
 export default function Topbar() {
   return (
-    <div className="flex w-full items-center justify-between border-b border-border px-2">
+    <div className="bg-paper flex w-full items-center justify-between border-b border-border px-2">
       <span>{/* <DemoAlert /> */}</span>
       <div className="flex items-center gap-2">
         {/* <LanguageButton /> */}

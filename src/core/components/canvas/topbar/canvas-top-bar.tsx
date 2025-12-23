@@ -14,7 +14,7 @@ const CanvasTopBar: React.FC = () => {
   const [zoom] = useCanvasZoom();
 
   return (
-    <div className="flex h-10 items-center justify-between border-b border-border bg-background/70 px-2 shadow-xl">
+    <div className="bg-paper flex h-10 items-center justify-between border-b border-border px-2 shadow-sm">
       <div className="flex h-full space-x-2">
         <Breakpoints canvas openDelay={400} />
         <Separator orientation="vertical" />

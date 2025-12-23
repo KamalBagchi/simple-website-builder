@@ -218,8 +218,10 @@ const RootLayout: ComponentType = () => {
           <Topbar />
 
           <main className="relative flex h-[calc(100vh-56px)] max-w-full flex-1 flex-row">
-            <div id="sidebar" className="flex w-12 flex-col items-center justify-between border-r border-border py-2">
-              <div className="flex flex-col gap-y-1">
+            <div
+              id="sidebar"
+              className="bg-paper flex w-12 flex-col items-center justify-between border-r border-border py-2">
+              <div className="bg-paper flex flex-col gap-y-1">
                 {[defaultPanels, topPanels].flat().map((item, index) => (
                   <Tooltip key={"button-top-" + index}>
                     <TooltipTrigger asChild>
@@ -261,7 +263,7 @@ const RootLayout: ComponentType = () => {
             {/* Side Panel */}
             <motion.div
               id="left-panel"
-              className="h-full max-h-screen border-r border-border"
+              className="bg-paper h-full max-h-screen border-r border-border"
               initial={{ width: leftPanelWidth }}
               animate={{ width: leftPanelWidth }}
               transition={{ duration: 0.3, ease: "easeInOut" }}>
@@ -288,7 +290,7 @@ const RootLayout: ComponentType = () => {
             </div>
             <motion.div
               id="right-panel"
-              className="h-full max-h-screen border-l border-border"
+              className="bg-paper h-full max-h-screen border-l border-border"
               initial={{ width: activePanel === "ai" ? 0 : DEFAULT_PANEL_WIDTH }}
               animate={{ width: activePanel === "ai" ? 0 : DEFAULT_PANEL_WIDTH }}
               transition={{ duration: 0.3, ease: "easeInOut" }}>

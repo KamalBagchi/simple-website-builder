@@ -30,7 +30,7 @@ export const ResizableCanvasWrapper = ({ children, onMount, onResize }: any) => 
     <div
       id={"main-content"}
       onClick={deselectSelected}
-      className="h-[calc(100vh-120px)] w-full border-l-4 border-r-4 pb-0"
+      className="h-full w-full border-l-4 border-r-4 pb-0"
       ref={mainContentRef}>
       {children}
     </div>

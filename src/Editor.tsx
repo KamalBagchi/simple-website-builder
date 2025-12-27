@@ -57,7 +57,8 @@ function ChaiBuilderDefault() {
         return true;
       }}
       onPreview={() => {
-        alert("onPreview");
+        window.open("/preview", "_blank");
+        // alert("onPreview");
         return true;
       }}
       onImageUpload={async (file: File) => {

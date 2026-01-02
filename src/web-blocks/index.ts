@@ -2,6 +2,7 @@ import { registerChaiBlock } from "@chaibuilder/runtime";
 
 import { Component as Box, Config as BoxConfig, BoxProps } from "@/web-blocks/box";
 import { Component as Button, Config as ButtonConfig, ButtonProps } from "@/web-blocks/button";
+import { Component as CountdownBlock, Config as CountdownBlockConfig, CountdownProps } from "@/web-blocks/countdown";
 import { Component as CustomHTML, CustomHTMLBlockProps, Config as CustomHTMLConfig } from "@/web-blocks/custom-html";
 import {
   Component as CustomScript,
@@ -69,6 +70,7 @@ const loadWebBlocks = () => {
   registerChaiBlock<BoxProps>(Box, BoxConfig);
   registerChaiBlock<EmptyBoxProps>(EmptyBox, EmptyBoxConfig);
   registerChaiBlock<ButtonProps>(Button, ButtonConfig);
+  registerChaiBlock<CountdownProps>(CountdownBlock, CountdownBlockConfig);
   registerChaiBlock<HeadingProps>(HeadingBlock, HeadingBlockConfig);
   registerChaiBlock<ParagraphProps>(ParagraphBlock, ParagraphBlockConfig);
   registerChaiBlock<SpanProps>(SpanBlock, SpanBlockConfig);

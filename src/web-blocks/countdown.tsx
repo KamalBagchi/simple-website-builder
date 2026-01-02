@@ -1,6 +1,6 @@
 import { ChaiBlockComponentProps, ChaiStyles, registerChaiBlockSchema, StylesProp } from "@chaibuilder/runtime";
 import { ClockIcon } from "@radix-ui/react-icons";
-import { useEffect, useState } from "react";
+import * as React from "react";
 
 export type CountdownProps = {
   targetDate: string;
@@ -17,13 +17,148 @@ export type CountdownProps = {
   styles: ChaiStyles;
 };
 
-interface TimeLeft {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  completed: boolean;
-}
+const generateCountdownHTML = (
+  targetDate: string,
+  targetTime: string,
+  showDays: boolean,
+  showHours: boolean,
+  showMinutes: boolean,
+  showSeconds: boolean,
+  completionMessage: string,
+  boxStyles: any,
+  numberStyles: any,
+  labelStyles: any,
+  messageStyles: any,
+  containerId: string,
+) => {
+  const timeUnits = [
+    { key: "days", label: "Days", show: showDays },
+    { key: "hours", label: "Hours", show: showHours },
+    { key: "minutes", label: "Minutes", show: showMinutes },
+    { key: "seconds", label: "Seconds", show: showSeconds },
+  ];
+
+  const visibleUnits = timeUnits.filter((unit) => unit.show);
+
+  // Helper to convert style object to inline attributes
+  const styleToAttrs = (styleObj: any) => {
+    if (!styleObj) return "";
+    const attrs: string[] = [];
+    if (styleObj.className) attrs.push(`class="${styleObj.className}"`);
+    if (styleObj.style) {
+      const styleStr = Object.entries(styleObj.style)
+        .map(([key, value]) => `${key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}:${value}`)
+        .join(";");
+      if (styleStr) attrs.push(`style="${styleStr}"`);
+    }
+    return attrs.join(" ");
+  };
+
+  return `
+    <div id="${containerId}" style="display: contents;">
+      ${visibleUnits
+        .map(
+          (unit) => `
+      <div ${styleToAttrs(boxStyles)} data-unit="${unit.key}">
+        <div ${styleToAttrs(numberStyles)} data-value="${unit.key}">00</div>
+        <div ${styleToAttrs(labelStyles)}>${unit.label}</div>
+      </div>
+    `,
+        )
+        .join("")}
+      <div ${styleToAttrs(messageStyles)} style="display: none;" data-message="complete"></div>
+    </div>
+    <script>
+      (function() {
+        var containerId = '${containerId}';
+        var container = document.getElementById(containerId);
+        
+        if (!container) {
+          // Try to find it after a brief delay if not immediately available
+          setTimeout(function() {
+            container = document.getElementById(containerId);
+            if (container) initCountdown();
+          }, 100);
+          return;
+        }
+        
+        initCountdown();
+        
+        function initCountdown() {
+          var units = container.querySelectorAll('[data-unit]');
+          var messageEl = container.querySelector('[data-message="complete"]');
+          
+          if (units.length === 0) return;
+          
+          var targetDate = '${targetDate}';
+          var targetTime = '${targetTime}';
+          var completionMessage = ${JSON.stringify(completionMessage)};
+          
+          function formatNumber(num) {
+            return num.toString().padStart(2, '0');
+          }
+          
+          function calculateTimeLeft() {
+            var target = new Date(targetDate + 'T' + targetTime).getTime();
+            var now = new Date().getTime();
+            var difference = target - now;
+            
+            if (difference <= 0) {
+              return {
+                days: 0,
+                hours: 0,
+                minutes: 0,
+                seconds: 0,
+                completed: true
+              };
+            }
+            
+            return {
+              days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+              hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+              minutes: Math.floor((difference / 1000 / 60) % 60),
+              seconds: Math.floor((difference / 1000) % 60),
+              completed: false
+            };
+          }
+          
+          function updateCountdown() {
+            var timeLeft = calculateTimeLeft();
+            
+            if (timeLeft.completed) {
+              for (var i = 0; i < units.length; i++) {
+                units[i].style.display = 'none';
+              }
+              if (messageEl) {
+                messageEl.textContent = completionMessage;
+                messageEl.style.display = 'block';
+              }
+              return true;
+            }
+            
+            ${visibleUnits
+              .map(
+                (unit) => `
+            var ${unit.key}El = container.querySelector('[data-value="${unit.key}"]');
+            if (${unit.key}El) ${unit.key}El.textContent = formatNumber(timeLeft.${unit.key});
+            `,
+              )
+              .join("")}
+            
+            return false;
+          }
+          
+          updateCountdown();
+          var timer = setInterval(function() {
+            if (updateCountdown()) {
+              clearInterval(timer);
+            }
+          }, 1000);
+        }
+      })();
+    </script>
+  `;
+};
 
 const Component = (props: ChaiBlockComponentProps<CountdownProps>) => {
   const {
@@ -43,84 +178,47 @@ const Component = (props: ChaiBlockComponentProps<CountdownProps>) => {
     inBuilder,
   } = props;
 
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    completed: false,
-  });
+  const containerId = `countdown-${blockProps.id || Math.random().toString(36).substr(2, 9)}`;
 
-  useEffect(() => {
-    const calculateTimeLeft = (): TimeLeft => {
-      const target = new Date(`${targetDate}T${targetTime}`).getTime();
-      const now = new Date().getTime();
-      const difference = target - now;
+  const htmlContent = generateCountdownHTML(
+    targetDate,
+    targetTime,
+    showDays,
+    showHours,
+    showMinutes,
+    showSeconds,
+    completionMessage,
+    boxStyles,
+    numberStyles,
+    labelStyles,
+    messageStyles,
+    containerId,
+  );
 
-      if (difference <= 0) {
-        return {
-          days: 0,
-          hours: 0,
-          minutes: 0,
-          seconds: 0,
-          completed: true,
-        };
-      }
-
-      return {
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60),
-        completed: false,
-      };
-    };
-
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
-
-    setTimeLeft(calculateTimeLeft());
-
-    return () => clearInterval(timer);
-  }, [targetDate, targetTime]);
-
-  const formatNumber = (num: number): string => {
-    return num.toString().padStart(2, "0");
-  };
-
-  if (timeLeft.completed) {
-    return (
-      <div {...blockProps} {...styles}>
-        <div {...messageStyles}>{completionMessage}</div>
-      </div>
-    );
-  }
-
-  const timeUnits = [
-    { value: timeLeft.days, label: "Days", show: showDays },
-    { value: timeLeft.hours, label: "Hours", show: showHours },
-    { value: timeLeft.minutes, label: "Minutes", show: showMinutes },
-    { value: timeLeft.seconds, label: "Seconds", show: showSeconds },
-  ];
-
-  return (
-    <div {...blockProps} {...styles}>
-      {timeUnits
-        .filter((unit) => unit.show)
-        .map((unit) => (
-          <div key={unit.label} {...boxStyles}>
-            <div {...numberStyles}>{formatNumber(unit.value)}</div>
-            <div {...labelStyles}>{unit.label}</div>
-          </div>
-        ))}
-      {inBuilder && completionMessage && (
+  return inBuilder ? (
+    <div className="relative">
+      {React.createElement("div", {
+        ...blockProps,
+        ...styles,
+        className: "absolute z-20 h-full w-full",
+      })}
+      {React.createElement("div", {
+        ...styles,
+        dangerouslySetInnerHTML: { __html: htmlContent.replace(/<script.*?>.*?<\/script>/gs, "") },
+      })}
+      {completionMessage && (
         <div className="mt-4 w-full border-t border-dashed border-muted-foreground/30 pt-4">
           <div className="mb-2 text-center text-xs text-muted-foreground">Completion Message Preview:</div>
           <div {...messageStyles}>{completionMessage}</div>
         </div>
       )}
     </div>
+  ) : (
+    React.createElement("div", {
+      ...blockProps,
+      ...styles,
+      dangerouslySetInnerHTML: { __html: htmlContent },
+    })
   );
 };
 

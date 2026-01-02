@@ -11,6 +11,7 @@ import { EXTERNAL_DATA } from "./_demo/EXTERNAL_DATA";
 import { PARTIALS } from "./_demo/PARTIALS";
 import { extendChaiBuilder } from "./extentions";
 import { Button } from "./ui";
+import ReactDOMServer from "react-dom/server";
 
 loadWebBlocks();
 extendChaiBuilder();
@@ -50,6 +51,8 @@ function ChaiBuilderDefault() {
       onSave={async ({ blocks, theme, needTranslations, domElements }: SavePageData) => {
         console.log("onSave", blocks, theme, needTranslations, domElements);
         console.log("HTML:", domElements);
+        const htmlString = ReactDOMServer.renderToString(domElements);
+        console.log("HTML String:", htmlString);
         localStorage.setItem("chai-builder-blocks", JSON.stringify(blocks));
         localStorage.setItem("chai-builder-theme", JSON.stringify(theme));
         setTheme(theme);

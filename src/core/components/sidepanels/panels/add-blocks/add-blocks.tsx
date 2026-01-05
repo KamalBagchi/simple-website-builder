@@ -16,7 +16,6 @@ import { Input } from "@/ui/shadcn/components/ui/input";
 import { ScrollArea } from "@/ui/shadcn/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/shadcn/components/ui/tabs";
 import { useAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
 import { capitalize, filter, find, map, reject, sortBy, values } from "lodash-es";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -28,18 +27,17 @@ export const ChaiBuilderBlocks = ({ groups, blocks, parentId, position, gridCols
   const [allBlocks] = useBlocksStore();
   const [searchTerm, setSearchTerm] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [tab] = useAtom(addBlockTabAtom);
   const parentType = find(allBlocks, (block) => block._id === parentId)?._type;
   const [selectedGroup, setSelectedGroup] = useState<string | null>("all");
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
 
-  // Focus search input on mount and tab change
+  // Focus search input on mount
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       searchInputRef.current?.focus();
     }, 0);
     return () => clearTimeout(timeoutId);
-  }, [tab]);
+  }, []);
 
   // Reset to "all" when searching
   useEffect(() => {
@@ -205,8 +203,6 @@ export const ChaiBuilderBlocks = ({ groups, blocks, parentId, position, gridCols
   );
 };
 
-const addBlockTabAtom = atomWithStorage<string>("__add_block_tab", "library");
-
 const AddBlocksPanel = ({
   className,
   showHeading = true,
@@ -219,12 +215,14 @@ const AddBlocksPanel = ({
   position?: number;
 }) => {
   const { t } = useTranslation();
-  const [tab, setTab] = useAtom(addBlockTabAtom);
   const [, setCategory] = useAtom(showPredefinedBlockCategoryAtom);
   const importHTMLSupport = useBuilderProp("importHTMLSupport", true);
   const { data: partialBlocksList } = usePartialBlocksList();
   const hasPartialBlocks = Object.keys(partialBlocksList || {}).length > 0;
   const { hasPermission } = usePermissions();
+
+  // Always use "core(blocks)" as the default tab, no state needed
+  const [tab, setTab] = useState("core");
 
   // If current tab is "partials" but there are no partial blocks, switch to "library" tab
   useEffect(() => {

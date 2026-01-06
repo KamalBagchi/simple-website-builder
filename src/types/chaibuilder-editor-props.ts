@@ -52,7 +52,7 @@ export type SavePageData = {
   theme?: ChaiThemeValues;
   needTranslations?: boolean;
   domElements?: any;
-  screenshot?: string;
+  canvasDisplayWidth?: number;
 };
 
 type TimeInSeconds = number;

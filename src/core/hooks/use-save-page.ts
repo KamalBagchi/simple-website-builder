@@ -9,81 +9,9 @@ import { has, isEmpty, noop } from "lodash-es";
 import { useLanguages } from "@/core/hooks/use-languages";
 import { useIsPageLoaded } from "@/core/hooks/use-is-page-loaded";
 import { getHTMLFromBlocks } from "../export-html/json-to-html";
-import { domToPng } from "modern-screenshot";
 import { useCanvasDisplayWidth } from "./use-screen-size-width";
 export const builderSaveStateAtom = atom<"SAVED" | "SAVING" | "UNSAVED">("SAVED"); // SAVING
 builderSaveStateAtom.debugLabel = "builderSaveStateAtom";
-
-// Convert blob to base64 data URL
-const blobToDataUrl = (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
-
-const captureCanvasScreenshot = async (canvasDisplayWidth: number): Promise<string | undefined> => {
-  // Get the iframe and capture its body content
-  const iframe = document.getElementById("canvas-iframe") as HTMLIFrameElement | null;
-  if (!iframe?.contentDocument?.body) return undefined;
-
-  console.log("canvasDisplayWidth", canvasDisplayWidth);
-
-  try {
-    const body = iframe.contentDocument.body;
-
-    // Fixed 16:9 aspect ratio (1920x1080)
-    const targetWidth = 1920;
-    const targetHeight = 1080;
-    const scale =
-      canvasDisplayWidth > targetWidth ? canvasDisplayWidth / targetWidth : targetWidth / canvasDisplayWidth;
-
-    // Capture the iframe's body content using modern-screenshot
-    // Set the cloned body width to 1920px so content reflows to fit
-    // Height is cropped at 1080px
-    const dataUrl = await domToPng(body, {
-      backgroundColor: "#ffffff",
-      width: targetWidth,
-      height: targetHeight,
-      style: {
-        width: `${targetWidth}px`,
-        maxWidth: `${targetWidth}px`,
-        minWidth: `${targetWidth}px`,
-        overflow: "hidden",
-        transform: `scale(${scale})`,
-        transformOrigin: "top left",
-      },
-      // Custom fetch that returns base64 data URLs
-      fetchFn: async (url: string) => {
-        if (url.startsWith("data:")) {
-          return url;
-        }
-        try {
-          // Add cache-buster to force fresh request with CORS headers
-          const cacheBuster = url.includes("?") ? `&_t=${Date.now()}` : `?_t=${Date.now()}`;
-          const res = await fetch(url + cacheBuster, {
-            mode: "cors",
-            cache: "no-store",
-          });
-          const blob = await res.blob();
-          // Convert to base64 data URL
-          const base64 = await blobToDataUrl(blob);
-          return base64;
-        } catch (e) {
-          console.warn("Failed to fetch resource:", url, e);
-          return "";
-        }
-      },
-    });
-
-    return dataUrl;
-  } catch (error) {
-    console.warn("Failed to capture canvas screenshot:", error);
-    return undefined;
-  }
-};
 
 export const checkMissingTranslations = (blocks: any[], lang: string): boolean => {
   if (!lang) return false;
@@ -142,7 +70,6 @@ export const useSavePage = () => {
       const pageData = getPageData();
 
       const domElements = await getHTMLFromBlocks(pageData.blocks, theme);
-      const screenshot = await captureCanvasScreenshot(canvasDisplayWidth);
 
       await onSave({
         autoSave,
@@ -150,7 +77,7 @@ export const useSavePage = () => {
         theme,
         needTranslations: needTranslations(),
         domElements,
-        screenshot,
+        canvasDisplayWidth,
       });
       setTimeout(() => {
         setSaveState("SAVED");
@@ -169,14 +96,13 @@ export const useSavePage = () => {
     setSaveState("SAVING");
     onSaveStateChange("SAVING");
     const pageData = getPageData();
-    const screenshot = await captureCanvasScreenshot(canvasDisplayWidth);
 
     await onSave({
       autoSave: true,
       blocks: pageData.blocks,
       theme,
       needTranslations: needTranslations(),
-      screenshot,
+      canvasDisplayWidth,
     });
     setTimeout(() => {
       setSaveState("SAVED");

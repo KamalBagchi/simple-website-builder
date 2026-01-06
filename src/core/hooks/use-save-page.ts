@@ -10,6 +10,7 @@ import { useLanguages } from "@/core/hooks/use-languages";
 import { useIsPageLoaded } from "@/core/hooks/use-is-page-loaded";
 import { getHTMLFromBlocks } from "../export-html/json-to-html";
 import { domToPng } from "modern-screenshot";
+import { useCanvasDisplayWidth } from "./use-screen-size-width";
 export const builderSaveStateAtom = atom<"SAVED" | "SAVING" | "UNSAVED">("SAVED"); // SAVING
 builderSaveStateAtom.debugLabel = "builderSaveStateAtom";
 
@@ -23,17 +24,37 @@ const blobToDataUrl = (blob: Blob): Promise<string> => {
   });
 };
 
-const captureCanvasScreenshot = async (): Promise<string | undefined> => {
+const captureCanvasScreenshot = async (canvasDisplayWidth: number): Promise<string | undefined> => {
   // Get the iframe and capture its body content
   const iframe = document.getElementById("canvas-iframe") as HTMLIFrameElement | null;
   if (!iframe?.contentDocument?.body) return undefined;
 
+  console.log("canvasDisplayWidth", canvasDisplayWidth);
+
   try {
     const body = iframe.contentDocument.body;
 
+    // Fixed 16:9 aspect ratio (1920x1080)
+    const targetWidth = 1920;
+    const targetHeight = 1080;
+    const scale =
+      canvasDisplayWidth > targetWidth ? canvasDisplayWidth / targetWidth : targetWidth / canvasDisplayWidth;
+
     // Capture the iframe's body content using modern-screenshot
+    // Set the cloned body width to 1920px so content reflows to fit
+    // Height is cropped at 1080px
     const dataUrl = await domToPng(body, {
       backgroundColor: "#ffffff",
+      width: targetWidth,
+      height: targetHeight,
+      style: {
+        width: `${targetWidth}px`,
+        maxWidth: `${targetWidth}px`,
+        minWidth: `${targetWidth}px`,
+        overflow: "hidden",
+        transform: `scale(${scale})`,
+        transformOrigin: "top left",
+      },
       // Custom fetch that returns base64 data URLs
       fetchFn: async (url: string) => {
         if (url.startsWith("data:")) {
@@ -90,6 +111,7 @@ export const checkMissingTranslations = (blocks: any[], lang: string): boolean =
 };
 
 export const useSavePage = () => {
+  const [canvasDisplayWidth] = useCanvasDisplayWidth();
   const [saveState, setSaveState] = useAtom(builderSaveStateAtom);
   const onSave = useBuilderProp("onSave", async (_args) => {});
   const onSaveStateChange = useBuilderProp("onSaveStateChange", noop);
@@ -120,7 +142,7 @@ export const useSavePage = () => {
       const pageData = getPageData();
 
       const domElements = await getHTMLFromBlocks(pageData.blocks, theme);
-      const screenshot = await captureCanvasScreenshot();
+      const screenshot = await captureCanvasScreenshot(canvasDisplayWidth);
 
       await onSave({
         autoSave,
@@ -147,7 +169,7 @@ export const useSavePage = () => {
     setSaveState("SAVING");
     onSaveStateChange("SAVING");
     const pageData = getPageData();
-    const screenshot = await captureCanvasScreenshot();
+    const screenshot = await captureCanvasScreenshot(canvasDisplayWidth);
 
     await onSave({
       autoSave: true,

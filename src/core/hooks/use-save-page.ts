@@ -13,39 +13,13 @@ import { domToPng } from "modern-screenshot";
 export const builderSaveStateAtom = atom<"SAVED" | "SAVING" | "UNSAVED">("SAVED"); // SAVING
 builderSaveStateAtom.debugLabel = "builderSaveStateAtom";
 
-// Convert loaded images to base64 to bypass CORS
-const convertImagesToBase64 = async (body: HTMLElement): Promise<Map<HTMLImageElement, string>> => {
-  const originalSrcs = new Map<HTMLImageElement, string>();
-  const images = body.querySelectorAll("img");
-
-  for (const img of Array.from(images)) {
-    if (!img.src || img.src.startsWith("data:")) continue;
-    if (!img.complete || img.naturalWidth === 0) continue;
-
-    try {
-      // Create a canvas and draw the already-loaded image
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        const base64 = canvas.toDataURL("image/png");
-        originalSrcs.set(img, img.src);
-        img.src = base64;
-      }
-    } catch {
-      // If CORS blocks canvas export, skip this image
-      console.warn("Could not convert image to base64:", img.src);
-    }
-  }
-
-  return originalSrcs;
-};
-
-const restoreImageSrcs = (originalSrcs: Map<HTMLImageElement, string>): void => {
-  originalSrcs.forEach((src, img) => {
-    img.src = src;
+// Convert blob to base64 data URL
+const blobToDataUrl = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
 };
 
@@ -57,19 +31,31 @@ const captureCanvasScreenshot = async (): Promise<string | undefined> => {
   try {
     const body = iframe.contentDocument.body;
 
-    // Convert images to base64 first to bypass CORS
-    const originalSrcs = await convertImagesToBase64(body);
-
-    // Wait for src changes to apply
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
     // Capture the iframe's body content using modern-screenshot
     const dataUrl = await domToPng(body, {
       backgroundColor: "#ffffff",
+      // Custom fetch that returns base64 data URLs
+      fetchFn: async (url: string) => {
+        if (url.startsWith("data:")) {
+          return url;
+        }
+        try {
+          // Add cache-buster to force fresh request with CORS headers
+          const cacheBuster = url.includes("?") ? `&_t=${Date.now()}` : `?_t=${Date.now()}`;
+          const res = await fetch(url + cacheBuster, {
+            mode: "cors",
+            cache: "no-store",
+          });
+          const blob = await res.blob();
+          // Convert to base64 data URL
+          const base64 = await blobToDataUrl(blob);
+          return base64;
+        } catch (e) {
+          console.warn("Failed to fetch resource:", url, e);
+          return "";
+        }
+      },
     });
-
-    // Restore original image sources
-    restoreImageSrcs(originalSrcs);
 
     return dataUrl;
   } catch (error) {

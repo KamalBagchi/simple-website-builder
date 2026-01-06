@@ -9,39 +9,69 @@ import { has, isEmpty, noop } from "lodash-es";
 import { useLanguages } from "@/core/hooks/use-languages";
 import { useIsPageLoaded } from "@/core/hooks/use-is-page-loaded";
 import { getHTMLFromBlocks } from "../export-html/json-to-html";
-import { canvasIframeAtom } from "@/core/atoms/ui";
-import html2canvas from "html2canvas";
+import { domToPng } from "modern-screenshot";
 export const builderSaveStateAtom = atom<"SAVED" | "SAVING" | "UNSAVED">("SAVED"); // SAVING
 builderSaveStateAtom.debugLabel = "builderSaveStateAtom";
 
-const captureCanvasScreenshot = async (iframe: HTMLIFrameElement | null): Promise<string | undefined> => {
+// Convert loaded images to base64 to bypass CORS
+const convertImagesToBase64 = async (body: HTMLElement): Promise<Map<HTMLImageElement, string>> => {
+  const originalSrcs = new Map<HTMLImageElement, string>();
+  const images = body.querySelectorAll("img");
+
+  for (const img of Array.from(images)) {
+    if (!img.src || img.src.startsWith("data:")) continue;
+    if (!img.complete || img.naturalWidth === 0) continue;
+
+    try {
+      // Create a canvas and draw the already-loaded image
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        const base64 = canvas.toDataURL("image/png");
+        originalSrcs.set(img, img.src);
+        img.src = base64;
+      }
+    } catch {
+      // If CORS blocks canvas export, skip this image
+      console.warn("Could not convert image to base64:", img.src);
+    }
+  }
+
+  return originalSrcs;
+};
+
+const restoreImageSrcs = (originalSrcs: Map<HTMLImageElement, string>): void => {
+  originalSrcs.forEach((src, img) => {
+    img.src = src;
+  });
+};
+
+const captureCanvasScreenshot = async (): Promise<string | undefined> => {
+  // Get the iframe and capture its body content
+  const iframe = document.getElementById("canvas-iframe") as HTMLIFrameElement | null;
   if (!iframe?.contentDocument?.body) return undefined;
 
   try {
-    const targetWidth = 1920;
-    const targetHeight = 1080;
+    const body = iframe.contentDocument.body;
 
-    const canvas = await html2canvas(iframe.contentDocument.body, {
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: null,
-      width: targetWidth,
-      height: targetHeight,
-      windowWidth: targetWidth,
-      windowHeight: targetHeight,
-      logging: false,
+    // Convert images to base64 first to bypass CORS
+    const originalSrcs = await convertImagesToBase64(body);
+
+    // Wait for src changes to apply
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Capture the iframe's body content using modern-screenshot
+    const dataUrl = await domToPng(body, {
+      backgroundColor: "#ffffff",
     });
 
-    // Resize to exact 1920x1080 if needed
-    const resizedCanvas = document.createElement("canvas");
-    resizedCanvas.width = targetWidth;
-    resizedCanvas.height = targetHeight;
-    const ctx = resizedCanvas.getContext("2d");
-    if (ctx) {
-      ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
-      return resizedCanvas.toDataURL("image/png", 0.8);
-    }
-    return canvas.toDataURL("image/png", 0.8);
+    // Restore original image sources
+    restoreImageSrcs(originalSrcs);
+
+    return dataUrl;
   } catch (error) {
     console.warn("Failed to capture canvas screenshot:", error);
     return undefined;
@@ -83,7 +113,6 @@ export const useSavePage = () => {
   const { hasPermission } = usePermissions();
   const { selectedLang, fallbackLang } = useLanguages();
   const [isPageLoaded] = useIsPageLoaded();
-  const [canvasIframe] = useAtom(canvasIframeAtom);
 
   const needTranslations = () => {
     const pageData = getPageData();
@@ -105,7 +134,7 @@ export const useSavePage = () => {
       const pageData = getPageData();
 
       const domElements = await getHTMLFromBlocks(pageData.blocks, theme);
-      const screenshot = await captureCanvasScreenshot(canvasIframe as HTMLIFrameElement | null);
+      const screenshot = await captureCanvasScreenshot();
 
       await onSave({
         autoSave,
@@ -121,7 +150,7 @@ export const useSavePage = () => {
       }, 100);
       return true;
     },
-    [getPageData, setSaveState, theme, onSave, onSaveStateChange, isPageLoaded, canvasIframe],
+    [getPageData, setSaveState, theme, onSave, onSaveStateChange, isPageLoaded],
     3000, // save only every 5 seconds
   );
 
@@ -132,7 +161,7 @@ export const useSavePage = () => {
     setSaveState("SAVING");
     onSaveStateChange("SAVING");
     const pageData = getPageData();
-    const screenshot = await captureCanvasScreenshot(canvasIframe as HTMLIFrameElement | null);
+    const screenshot = await captureCanvasScreenshot();
 
     await onSave({
       autoSave: true,

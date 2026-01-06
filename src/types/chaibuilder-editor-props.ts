@@ -308,6 +308,14 @@ export interface ChaiBuilderEditorProps {
   getBlockAsyncProps?: (args: { block: ChaiBlock }) => Promise<{ [key: string]: any }>;
 
   /**
+   * Image proxy URL for screenshot capture.
+   * Used to fetch external images that don't have CORS headers.
+   * The proxy should accept the image URL as a query parameter.
+   * Example: "https://your-api.com/proxy?url="
+   */
+  imageProxyUrl?: string;
+
+  /**
    * temporary props. Not to be used in production
    */
   _tempProps?: Record<string, any>;

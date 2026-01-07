@@ -61,6 +61,7 @@ export { registerChaiMediaManager } from "@/core/extensions/media-manager";
 export { registerChaiSaveToLibrary } from "@/core/extensions/save-to-library";
 export { registerChaiSidebarPanel } from "@/core/extensions/sidebar-panels";
 export { registerChaiTopBar } from "@/core/extensions/top-bar";
+export { registerChaiTopPanel, useTopPanelComponent } from "@/core/extensions/top-panel";
 export {
   IfChaiFeatureFlag,
   registerChaiFeatureFlag,

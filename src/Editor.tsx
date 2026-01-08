@@ -1,6 +1,6 @@
 import { lsBlocksAtom, lsThemeAtom } from "@/_demo/atoms-dev";
 import { defaultShadcnPreset } from "@/_demo/THEME_PRESETS";
-import { ChaiBlock, ChaiBuilderEditor, registerChaiSidebarPanel } from "@/core/main";
+import { ChaiBlock, ChaiBuilderEditor, registerChaiSidebarPanel, registerChaiTopPanel } from "@/core/main";
 import "@/index.css";
 import { SavePageData } from "@/types/chaibuilder-editor-props";
 import { loadWebBlocks } from "@/web-blocks";
@@ -11,6 +11,10 @@ import { EXTERNAL_DATA } from "./_demo/EXTERNAL_DATA";
 import { PARTIALS } from "./_demo/PARTIALS";
 import { extendChaiBuilder } from "./extentions";
 import { Button } from "./ui";
+
+const TopBar = () => <div>Top Bar</div>;
+
+registerChaiTopPanel(TopBar);
 
 loadWebBlocks();
 extendChaiBuilder();
@@ -47,8 +51,8 @@ function ChaiBuilderDefault() {
       autoSave={true}
       autoSaveInterval={15}
       blocks={blocks}
-      onSave={async ({ blocks, theme, needTranslations, domElements, screenshot }: SavePageData) => {
-        console.log("onSave", blocks, theme, needTranslations, domElements, screenshot);
+      onSave={async ({ blocks, theme, needTranslations, domElements, canvasDisplayWidth }: SavePageData) => {
+        console.log("onSave", blocks, theme, needTranslations, domElements, canvasDisplayWidth);
         console.log("HTML:", domElements);
         localStorage.setItem("chai-builder-blocks", JSON.stringify(blocks));
         localStorage.setItem("chai-builder-theme", JSON.stringify(theme));

@@ -36,6 +36,7 @@ import { Component as ImageBlock, Config as ImageBlockConfig, ImageBlockProps } 
 import { Component as LinkBlock, Config as LinkBlockConfig, LinkBlockProps } from "@/web-blocks/link";
 import { Component as ListBlock, Config as ListBlockConfig, ListBlockProps } from "@/web-blocks/list";
 import { Component as ListItemBlock, Config as ListItemBlockConfig, ListItemBlockProps } from "@/web-blocks/listitem";
+import { Component as NavbarBlock, Config as NavbarBlockConfig, NavbarProps } from "@/web-blocks/navbar";
 import { Component as ParagraphBlock, Config as ParagraphBlockConfig, ParagraphProps } from "@/web-blocks/paragraph";
 import { PartialBlock, PartialBlockConfig, PartialBlockProps } from "@/web-blocks/partial-block";
 import {
@@ -78,6 +79,7 @@ const loadWebBlocks = () => {
   registerChaiBlock<LinkBlockProps>(LinkBlock, LinkBlockConfig);
   registerChaiBlock<ListBlockProps>(ListBlock, ListBlockConfig);
   registerChaiBlock<ListItemBlockProps>(ListItemBlock, ListItemBlockConfig);
+  registerChaiBlock<NavbarProps>(NavbarBlock, NavbarBlockConfig);
   registerChaiBlock<IconBlockProps>(IconBlock, IconBlockConfig);
   registerChaiBlock<ImageBlockProps>(ImageBlock, ImageBlockConfig);
   registerChaiBlock<VideoBlockProps>(VideoBlock, VideoBlockConfig);

@@ -27,6 +27,8 @@ const PageTypeField = ({
   const [pageTypeItems, setPageTypeItems] = useState<PageTypeItem[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const listRef = useRef<HTMLUListElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const currentPageTypeName = pageTypes?.find((_pageType) => _pageType.key === pageType)?.name;
 
@@ -107,6 +109,17 @@ const PageTypeField = ({
     }
   }, [selectedIndex]);
 
+  useEffect(() => {
+    if (inputRef.current && (loading || !isEmpty(pageTypeItems) || (isSearching && isEmpty(pageTypeItems)))) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [loading, pageTypeItems, isSearching]);
+
   const clearSearch = () => {
     setSearchQuery("");
     setPageTypeItems([]);
@@ -123,7 +136,7 @@ const PageTypeField = ({
   };
 
   return (
-    <div>
+    <div className="relative">
       <select name="pageType" value={pageType} onChange={(e) => setPageType(e.target.value)}>
         {map(pageTypes, (col) => (
           <option key={col.key} value={col.key}>
@@ -132,53 +145,62 @@ const PageTypeField = ({
         ))}
       </select>
       {pageType && (
-        <div className="group relative mt-2 flex items-center">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t(`Search ${currentPageTypeName ?? ""}`)}
-            className="w-full rounded-md border border-gray-300 p-2 pr-16"
-          />
-          <div className="absolute bottom-2 right-2 top-3 flex items-center gap-1.5">
-            {searchQuery && (
-              <button onClick={clearSearch} className="text-gray-400 hover:text-gray-600" title={t("Clear search")}>
-                <Cross1Icon className="h-4 w-4" />
-              </button>
-            )}
+        <div className="relative">
+          <div className="group relative mt-2 flex items-center">
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t(`Search ${currentPageTypeName ?? ""}`)}
+              className="w-full rounded-md border border-gray-300 p-2 pr-16"
+            />
+            <div className="absolute bottom-2 right-2 top-3 flex items-center gap-1.5">
+              {searchQuery && (
+                <button onClick={clearSearch} className="text-gray-400 hover:text-gray-600" title={t("Clear search")}>
+                  <Cross1Icon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      )}
 
-      {(loading || !isEmpty(pageTypeItems) || (isSearching && isEmpty(pageTypeItems))) && (
-        <div className="absolute z-40 mt-2 max-h-40 w-full max-w-[250px] overflow-y-auto rounded-md border border-border bg-background shadow-lg">
-          {loading ? (
-            <div className="space-y-1 p-2">
-              <div className="h-6 w-full animate-pulse rounded bg-gray-200" />
-              <div className="h-6 w-full animate-pulse rounded bg-gray-200" />
+          {(loading || !isEmpty(pageTypeItems) || (isSearching && isEmpty(pageTypeItems))) && (
+            <div
+              className="fixed z-50 max-h-40 overflow-y-auto rounded-md border border-border bg-background shadow-lg"
+              style={{
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width}px`,
+              }}>
+              {loading ? (
+                <div className="space-y-1 p-2">
+                  <div className="h-6 w-full animate-pulse rounded bg-gray-200" />
+                  <div className="h-6 w-full animate-pulse rounded bg-gray-200" />
+                </div>
+              ) : isSearching && isEmpty(pageTypeItems) ? (
+                <div className="flex items-center justify-center p-4 text-sm text-gray-500">
+                  {t("No results found for")} "{searchQuery}"
+                </div>
+              ) : (
+                <ul ref={listRef}>
+                  {map(pageTypeItems?.slice(0, 20), (item, index) => (
+                    <li
+                      key={item.id}
+                      onClick={() => handleSelect(item)}
+                      className={`cursor-pointer p-2 text-xs ${
+                        href?.includes(item.id)
+                          ? "bg-blue-200"
+                          : index === selectedIndex
+                            ? "bg-gray-100"
+                            : "hover:bg-gray-100"
+                      }`}>
+                      {item.name} {item.slug && <small className="font-light text-gray-500">( {item.slug} )</small>}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          ) : isSearching && isEmpty(pageTypeItems) ? (
-            <div className="flex items-center justify-center p-4 text-sm text-gray-500">
-              {t("No results found for")} "{searchQuery}"
-            </div>
-          ) : (
-            <ul ref={listRef}>
-              {map(pageTypeItems?.slice(0, 20), (item, index) => (
-                <li
-                  key={item.id}
-                  onClick={() => handleSelect(item)}
-                  className={`cursor-pointer p-2 text-xs ${
-                    href?.includes(item.id)
-                      ? "bg-blue-200"
-                      : index === selectedIndex
-                        ? "bg-gray-100"
-                        : "hover:bg-gray-100"
-                  }`}>
-                  {item.name} {item.slug && <small className="font-light text-gray-500">( {item.slug} )</small>}
-                </li>
-              ))}
-            </ul>
           )}
         </div>
       )}
